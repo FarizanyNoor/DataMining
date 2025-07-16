@@ -63,7 +63,7 @@ if not fitur_numerik:
     st.warning("⚠️ File ini tidak memiliki kolom numerik untuk klasterisasi.")
     st.stop()
 
-    fitur = st.multiselect("Pilih Fitur untuk Klasterisasi", fitur_numerik), key="fitur_klaster")
+    fitur = st.multiselect("Pilih Fitur untuk Klasterisasi", fitur_numerik, key="fitur_klaster")
     
     k = st.slider("Pilih Jumlah Klaster (k)", 2, 10, 3, key="slider_k")
 
