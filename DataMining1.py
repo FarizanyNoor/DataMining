@@ -57,12 +57,17 @@ with tabs[1]:
 
     # 2. Klasterisasi
     st.subheader("⚙️ Klasterisasi Pelanggan")
-    fitur_numerik = ['Age', 'Annual Income (k$)', 'Spending Score (1-100)']
-    fitur = st.multiselect("Pilih Fitur untuk Klasterisasi", fitur_numerik, default=fitur_numerik[:2], key="fitur_klaster")
+    fitur_numerik = data.select_dtypes(include=['int64', 'float64']).columns.tolist()
+
+if not fitur_numerik:
+    st.warning("⚠️ File ini tidak memiliki kolom numerik untuk klasterisasi.")
+    st.stop()
+
+    fitur = st.multiselect("Pilih Fitur untuk Klasterisasi", fitur_numerik), key="fitur_klaster")
     
     k = st.slider("Pilih Jumlah Klaster (k)", 2, 10, 3, key="slider_k")
 
-    if len(fitur) >= 2:
+    if len(fitur) >= 1:
         X = data[fitur]
         scaler = StandardScaler()
         X_scaled = scaler.fit_transform(X)
