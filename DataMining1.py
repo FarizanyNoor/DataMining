@@ -1,162 +1,104 @@
 import streamlit as st
 import pandas as pd
-import os
+from sklearn.cluster import KMeans
 import matplotlib.pyplot as plt
 import seaborn as sns
-from sklearn.cluster import KMeans
-from sklearn.preprocessing import StandardScaler
+import io
 
-# Setup halaman
-st.set_page_config(page_title="Dashboard Klasterisasi", layout="wide")
-st.title("👩‍🏫 Aplikasi Klasterisasi Pelanggan Mall")
+st.set_page_config(page_title="Klasterisasi Mall Customers", layout="wide")
 
-DATA_DIR = "data"
-os.makedirs(DATA_DIR, exist_ok=True)
+st.title("Aplikasi Klasterisasi Data Mall Customers")
 
-def list_csv_files():
-    return [f for f in os.listdir(DATA_DIR) if f.endswith('.csv')]
+# Load default dataset
+@st.cache_data
+def load_default_data():
+    data = '''CustomerID,Gender,Age,Annual Income (k$),Spending Score (1-100)
+1,Male,19,15,39
+2,Male,21,15,81
+3,Female,20,16,6
+4,Female,23,16,77
+6,Female,22,17,76
+7,Female,35,18,6
+8,Female,23,18,94
+9,Male,64,19,3
+10,Female,30,19,72'''
+    return pd.read_csv(io.StringIO(data))
 
-def load_data(filename):
-    return pd.read_csv(os.path.join(DATA_DIR, filename))
+# Upload CSV
+uploaded_file = st.file_uploader("Upload file CSV", type=["csv"])
+if uploaded_file is not None:
+    df = pd.read_csv(uploaded_file)
+else:
+    st.info("Menggunakan data default karena tidak ada file yang diupload.")
+    df = load_default_data()
 
-def save_data(df, filename):
-    df.to_csv(os.path.join(DATA_DIR, filename), index=False)
+st.subheader("Data Customer")
+st.dataframe(df, use_container_width=True)
 
-def delete_row_by_id(filename, identifier):
-    path = os.path.join(DATA_DIR, filename)
-    df = pd.read_csv(path)
-    if "CustomerID" in df.columns:
-        df = df[df["CustomerID"] != identifier]
-    elif "Nama Lengkap" in df.columns:
-        df = df[df["Nama Lengkap"] != identifier]
-    df.to_csv(path, index=False)
+# Identifikasi fitur numerik
+fitur_numerik = df.select_dtypes(include=['int64', 'float64']).columns.tolist()
+fitur_numerik = [col for col in fitur_numerik if col not in ['CustomerID']]
 
-tabs = st.tabs([
-    "Beranda",
-    "Dashboard Data",
-    "Tambah Data",
-    "Hapus Data"
-])
+if not fitur_numerik:
+    st.error("⚠️ Tidak ada kolom numerik yang bisa digunakan untuk klasterisasi.")
+else:
+    st.sidebar.header("Pengaturan Klasterisasi")
+    fitur = st.sidebar.multiselect("Pilih Fitur", fitur_numerik, default=fitur_numerik[:2], key="fitur_klaster")
+    k = st.sidebar.slider("Jumlah Klaster (K)", min_value=2, max_value=10, value=3)
 
-# Tab 1: Beranda
-with tabs[0]:
-    st.header("📌 Selamat Datang")
-    st.write("""
-        Aplikasi ini membantu proses **klasterisasi pelanggan mall** menggunakan metode **K-Means Clustering**.
-        Gunakan menu di tab atas untuk mengelola data, menambahkan, menghapus, dan menganalisis file CSV.
-    """)
+    if fitur:
+        X = df[fitur]
+        model = KMeans(n_clusters=k, random_state=42)
+        df['Cluster'] = model.fit_predict(X)
 
-# Tab 2: Dashboard Data
-with tabs[1]:
-    st.header("📊 Dashboard Klasterisasi")
+        st.subheader("Hasil Klasterisasi")
+        st.write(df.head())
 
-    csv_files = list_csv_files()
-    if not csv_files:
-        st.warning("⚠️ Tidak ada file CSV ditemukan. Silakan upload file CSV ke folder 'data/' secara manual.")
-        st.stop()
-    filename = st.selectbox("Pilih File CSV", csv_files, key="dashboard_select")
-    data = load_data(filename)
+        # Visualisasi
+        if len(fitur) == 2:
+            fig, ax = plt.subplots()
+            sns.scatterplot(data=df, x=fitur[0], y=fitur[1], hue='Cluster', palette='tab10', ax=ax)
+            ax.set_title("Visualisasi Klaster")
+            st.pyplot(fig)
+        elif len(fitur) == 3:
+            from mpl_toolkits.mplot3d import Axes3D
+            fig = plt.figure()
+            ax = fig.add_subplot(111, projection='3d')
+            scatter = ax.scatter(df[fitur[0]], df[fitur[1]], df[fitur[2]], c=df['Cluster'], cmap='tab10')
+            ax.set_xlabel(fitur[0])
+            ax.set_ylabel(fitur[1])
+            ax.set_zlabel(fitur[2])
+            ax.set_title("Visualisasi Klaster 3D")
+            st.pyplot(fig)
+        else:
+            st.info("Pilih maksimal 3 fitur untuk visualisasi.")
 
-    # Paksa konversi kolom 'Usia' ke numerik jika ada
-    if 'Usia' in data.columns:
-        data['Usia'] = pd.to_numeric(data['Usia'], errors='coerce')
+        # Download hasil klasterisasi
+        csv = df.to_csv(index=False).encode('utf-8')
+        st.download_button(
+            label="📥 Unduh Hasil Klasterisasi CSV",
+            data=csv,
+            file_name='hasil_klasterisasi.csv',
+            mime='text/csv'
+        )
 
-    fitur_numerik = data.select_dtypes(include=['int64', 'float64']).columns.tolist()
+# Tambah Data Manual
+st.subheader("Tambah Data Baru (Opsional)")
+with st.expander("📌 Klik untuk Tambah Data"):
+    with st.form("form_tambah"):
+        gender = st.selectbox("Gender", ["Male", "Female"])
+        age = st.number_input("Age", min_value=1, max_value=100, value=25)
+        income = st.number_input("Annual Income (k$)", min_value=1, value=50)
+        score = st.number_input("Spending Score (1-100)", min_value=1, max_value=100, value=50)
+        submit = st.form_submit_button("Tambah")
 
-    if not fitur_numerik:
-        st.warning("⚠️ File ini tidak memiliki kolom numerik untuk klasterisasi.")
-        st.stop()
-
-    st.subheader("⚙️ Klasterisasi Pelanggan")
-    fitur = st.multiselect("Pilih Fitur untuk Klasterisasi", fitur_numerik, key="fitur_klaster")
-
-    k = st.slider("Pilih Jumlah Klaster (k)", 2, 10, 3, key="slider_k")
-
-    if len(fitur) >= 1:
-        X = data[fitur]
-        scaler = StandardScaler()
-        X_scaled = scaler.fit_transform(X)
-
-        kmeans = KMeans(n_clusters=k, random_state=0)
-        kmeans.fit(X_scaled)
-        data['Cluster'] = kmeans.labels_
-
-        st.success("✅ Klasterisasi berhasil dilakukan!")
-    else:
-        st.info("Pilih minimal dua fitur numerik untuk proses klasterisasi.")
-        data['Cluster'] = None
-
-    st.subheader("🔎 Pilih Kolom untuk Ditampilkan")
-    semua_kolom = list(data.columns)
-    kolom_dipilih = st.multiselect("Pilih kolom", semua_kolom, default=semua_kolom, key="pilih_kolom")
-
-    st.subheader("🔍 Cari Data")
-    kata_kunci = st.text_input("Masukkan kata kunci pencarian")
-
-    if kata_kunci and kolom_dipilih:
-        filter_mask = pd.Series(False, index=data.index)
-        for col in kolom_dipilih:
-            filter_mask = filter_mask | data[col].astype(str).str.contains(kata_kunci, case=False, na=False)
-        data_filtered = data[filter_mask]
-    else:
-        data_filtered = data
-
-    if kolom_dipilih:
-        st.dataframe(data_filtered[kolom_dipilih])
-    else:
-        st.warning("⚠️ Pilih minimal satu kolom untuk ditampilkan.")
-
-    # Visualisasi jika klasterisasi berhasil
-    if len(fitur) >= 2 and data['Cluster'].notna().all():
-        fig, ax = plt.subplots()
-        sns.scatterplot(data=data_filtered, x=fitur[0], y=fitur[1], hue="Cluster", palette="Set2", ax=ax)
-        plt.title("Visualisasi Klaster")
-        st.pyplot(fig)
-
-# Tab 3: Tambah Data
-with tabs[2]:
-    st.header("➕ Tambah Data (Manual)")
-
-    st.info("Fitur tambah data hanya mendukung CSV dengan kolom standar seperti 'Usia' dan 'Nama Lengkap'.")
-
-    csv_files = list_csv_files()
-    if not csv_files:
-        st.warning("⚠️ Tidak ada file CSV tersedia.")
-    else:
-        filename = st.selectbox("Pilih File CSV", csv_files, key="tambah_select")
-
-        with st.form("form_tambah"):
-            nama = st.text_input("Nama Lengkap")
-            usia = st.number_input("Usia", min_value=1, max_value=100)
-
-            submitted = st.form_submit_button("Simpan")
-
-            if submitted:
-                new_row = {
-                    "Nama Lengkap": nama,
-                    "Usia": usia
-                }
-                df = load_data(filename)
-                df = pd.concat([df, pd.DataFrame([new_row])], ignore_index=True)
-                save_data(df, filename)
-                st.success("✅ Data berhasil ditambahkan!")
-
-# Tab 4: Hapus Data
-with tabs[3]:
-    st.header("🗑️ Hapus Data")
-
-    csv_files = list_csv_files()
-    if not csv_files:
-        st.warning("⚠️ Tidak ada file CSV.")
-    else:
-        filename = st.selectbox("Pilih File CSV", csv_files, key="hapus_select")
-        df = load_data(filename)
-        st.dataframe(df)
-
-        identifier = st.text_input("Masukkan Nama Lengkap yang ingin dihapus", key="hapus_id")
-        if st.button("Hapus Data"):
-            if identifier in df["Nama Lengkap"].values:
-                delete_row_by_id(filename, identifier)
-                st.success(f"✅ Data untuk '{identifier}' berhasil dihapus.")
-            else:
-                st.warning("⚠️ Nama tidak ditemukan.")
+        if submit:
+            new_data = pd.DataFrame({
+                'CustomerID': [df['CustomerID'].max() + 1 if 'CustomerID' in df.columns else len(df)+1],
+                'Gender': [gender],
+                'Age': [age],
+                'Annual Income (k$)': [income],
+                'Spending Score (1-100)': [score]
+            })
+            df = pd.concat([df, new_data], ignore_index=True)
+            st.success("✅ Data berhasil ditambahkan. Silakan ulangi klasterisasi jika perlu.")
