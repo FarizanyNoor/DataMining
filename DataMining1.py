@@ -67,7 +67,7 @@ with tabs[1]:
         st.warning("⚠️ File ini tidak memiliki kolom numerik untuk klasterisasi.")
         st.stop()
 
-    st.subheader("⚙️ Klasterisasi Data Siswa")
+    st.subheader("⚙️ Klasterisasi Pelanggan")
     fitur = st.multiselect("Pilih Fitur untuk Klasterisasi", fitur_numerik, key="fitur_klaster")
 
     k = st.slider("Pilih Jumlah Klaster (k)", 2, 10, 3, key="slider_k")
