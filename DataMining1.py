@@ -8,7 +8,7 @@ from sklearn.preprocessing import StandardScaler
 
 # Setup halaman
 st.set_page_config(page_title="Dashboard Klasterisasi", layout="wide")
-st.title("👩‍🏫 Aplikasi Klasterisasi Data Siswa")
+st.title("👩‍🏫 Aplikasi Klasterisasi Pelanggan Mall")
 
 DATA_DIR = "data"
 os.makedirs(DATA_DIR, exist_ok=True)
@@ -42,13 +42,13 @@ tabs = st.tabs([
 with tabs[0]:
     st.header("📌 Selamat Datang")
     st.write("""
-        Aplikasi ini membantu proses **klasterisasi data siswa** menggunakan metode **K-Means Clustering**.
+        Aplikasi ini membantu proses **klasterisasi pelanggan mall** menggunakan metode **K-Means Clustering**.
         Gunakan menu di tab atas untuk mengelola data, menambahkan, menghapus, dan menganalisis file CSV.
     """)
 
 # Tab 2: Dashboard Data
 with tabs[1]:
-    st.header("📊 Dashboard Data dan Klasterisasi")
+    st.header("📊 Dashboard Klasterisasi")
 
     csv_files = list_csv_files()
     if not csv_files:
@@ -72,7 +72,7 @@ with tabs[1]:
 
     k = st.slider("Pilih Jumlah Klaster (k)", 2, 10, 3, key="slider_k")
 
-    if len(fitur) >= 2:
+    if len(fitur) >= 1:
         X = data[fitur]
         scaler = StandardScaler()
         X_scaled = scaler.fit_transform(X)
