@@ -33,7 +33,6 @@ tabs = st.tabs([
     "Dashboard Data",
     "Tambah Data",
     "Hapus Data",
-    "Upload/Hapus CSV"
 ])
 
 # Tab 1: Beranda
