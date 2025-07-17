@@ -65,7 +65,8 @@ elif menu == "Kluster Data":
     fitur_numerik = data.select_dtypes(include='number').columns.tolist()
     fitur = st.multiselect("Pilih Fitur untuk Klasterisasi", fitur_numerik, default=fitur_numerik[:2], key="fitur_klaster")
 
-    k = st.number_input("Masukkan Jumlah Klaster (k)", min_value=2, max_value=10, value=3, step=1)
+    # Input jumlah klaster, tanpa batas maksimal
+    k = st.number_input("Masukkan Jumlah Klaster (k)", min_value=2, value=3, step=1, format="%d")
 
     if len(fitur) == 2:
         X = data[fitur]
