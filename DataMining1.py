@@ -43,11 +43,46 @@ menu = st.sidebar.selectbox("📂 Menu", [
 
 # Beranda
 if menu == "Beranda":
-    st.header("📌 Selamat Datang")
-    st.write("""
-        Aplikasi ini membantu proses **Klasterisasi Data** menggunakan metode **K-Means Clustering**.
-        Gunakan menu di sidebar untuk menambahkan data, menghapus data, dan melakukan klasterisasi.
+    st.header("📌 Selamat Datang di Aplikasi Klasterisasi Data Pelanggan")
+
+    st.markdown("""
+    Aplikasi ini dirancang untuk membantu Anda dalam mengelompokkan data pelanggan menggunakan metode **K-Means Clustering**.
+    Dengan aplikasi ini, Anda dapat:
+    - Mengelola dan menambahkan file CSV Anda sendiri
+    - Menambah dan menghapus data pelanggan
+    - Melakukan klasterisasi untuk analisis segmen pelanggan
+    - Melihat hasil dalam bentuk tabel dan visualisasi
+
+    ---
     """)
+
+    st.subheader("🧭 Panduan Penggunaan Aplikasi")
+    st.markdown("""
+    1. **Unggah File CSV** di menu `Manajemen File CSV`
+    2. **Tambah atau Hapus Data** pelanggan di menu yang tersedia
+    3. **Lakukan Klasterisasi** berdasarkan fitur numerik (misalnya: usia, pendapatan)
+    4. **Lihat Hasil Klasterisasi** dalam bentuk tabel & grafik
+    """)
+
+    st.subheader("📁 Contoh Struktur File CSV")
+    st.code("CustomerID,Gender,Age,Annual Income (k$),Spending Score (1-100)", language="csv")
+
+    # Tampilkan daftar file CSV
+    csv_files = list_csv_files()
+    st.subheader("📄 File CSV Tersedia")
+    if csv_files:
+        for file in csv_files:
+            st.write(f"- {file}")
+    else:
+        st.info("Belum ada file CSV yang diunggah.")
+
+    st.subheader("💡 Tentang K-Means Clustering")
+    st.markdown("""
+    Metode **K-Means Clustering** adalah algoritma unsupervised learning yang digunakan untuk membagi data menjadi kelompok-kelompok (klaster) berdasarkan kemiripan nilai fitur.
+    """, unsafe_allow_html=True)
+
+    st.markdown("---")
+    st.caption("🚀 Dibuat oleh: Farizany Noor | Versi 1.0 | 2025")
 
 # Klaster Data
 elif menu == "Kluster Data":
