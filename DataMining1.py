@@ -101,7 +101,7 @@ elif menu == "Kluster Data":
         st.warning("⚠️ Pilih minimal satu kolom untuk ditampilkan.")
 
     # Jika klasterisasi berhasil, tampilkan scatterplot
-    if len(fitur) = 2:
+    if len(fitur) == 2:
         fig, ax = plt.subplots()
         sns.scatterplot(data=data_filtered, x=fitur[0], y=fitur[1], hue="Cluster", palette="Set1", ax=ax)
         plt.title("Hasil Klasterisasi")
