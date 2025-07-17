@@ -59,7 +59,7 @@ elif menu == "Kluster Data":
     # 2. Klasterisasi
     st.subheader("⚙️ Klasterisasi Pelanggan")
     fitur_numerik = ['Age', 'Annual Income (k$)', 'Spending Score (1-100)']
-    fitur = st.multiselect("Pilih Fitur untuk Klasterisasi", fitur_numerik, default=fitur_numerik[:2], key="fitur_klaster")
+    fitur = st.multiselect("Pilih Fitur untuk Klasterisasi", fitur_numerik, default=fitur_numerik[=2], key="fitur_klaster")
     
     k = st.slider("Pilih Jumlah Klaster (k)", 2, 10, 3, key="slider_k")
 
