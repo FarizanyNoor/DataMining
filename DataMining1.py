@@ -28,38 +28,49 @@ def delete_row_by_id(filename, customer_id):
     df = df[df["CustomerID"] != customer_id]
     df.to_csv(path, index=False)
 
+# ====================== MENU SIDEBAR ============================
 menu = st.sidebar.selectbox("📂 Menu", [
+    "📁 Upload File CSV",
     "Beranda",
     "Kluster Data",
     "Tambah Data",
     "Hapus Data",
 ])
 
-# Tab 1: Beranda
-if menu == "Beranda":
+# ===================== MENU 0: Upload File ========================
+if menu == "📁 Upload File CSV":
+    st.header("📤 Upload File CSV Baru")
+
+    uploaded_file = st.file_uploader("Pilih file CSV", type="csv")
+    if uploaded_file:
+        save_path = os.path.join(DATA_DIR, uploaded_file.name)
+        with open(save_path, "wb") as f:
+            f.write(uploaded_file.read())
+        st.success(f"✅ File '{uploaded_file.name}' berhasil diunggah ke folder data/")
+
+# ===================== MENU 1: Beranda ============================
+elif menu == "Beranda":
     st.header("📌 Selamat Datang")
     st.write("""
         Aplikasi ini membantu proses **Klasterisasi Data** menggunakan metode **K-Means Clustering**.
         Gunakan menu di samping untuk mengelola data, menambahkan, menghapus, dan melakukan klasterisasi.
     """)
 
-# Tab 2: Klasterisasi
+# ===================== MENU 2: Klasterisasi ========================
 elif menu == "Kluster Data":
     st.header("📊 Klasterisasi")
 
     csv_files = list_csv_files()
     if not csv_files:
-        st.warning("⚠️ Tidak ada file CSV ditemukan. Silakan upload file CSV terlebih dahulu.")
+        st.warning("⚠️ Tidak ada file CSV ditemukan.")
         st.stop()
 
     filename = st.selectbox("Pilih File CSV", csv_files, key="dashboard_select")
     data = load_data(filename)
 
-    # 1. Klasterisasi
     st.subheader("⚙️ Klasterisasi Pelanggan")
     fitur_numerik = ['Age', 'Annual Income (k$)', 'Spending Score (1-100)']
     fitur = st.multiselect("Pilih Fitur untuk Klasterisasi", fitur_numerik, default=fitur_numerik[:2], key="fitur_klaster")
-
     k = st.slider("Pilih Jumlah Klaster (k)", 2, 10, 3, key="slider_k")
 
     if len(fitur) == 2:
@@ -76,11 +87,9 @@ elif menu == "Kluster Data":
         st.info("Hanya bisa memilih dua fitur numerik untuk proses klasterisasi.")
         st.stop()
 
-    # 2. Filter Kolom & Kata Kunci
     st.subheader("🔍 Filter Data Berdasarkan Kolom yang Dipilih")
     semua_kolom = list(data.columns)
     kolom_filter = st.multiselect("Pilih Kolom Target Pencarian", semua_kolom, default=semua_kolom)
-
     kata_kunci = st.text_input("Masukkan Kata Kunci Pencarian")
 
     if kata_kunci and kolom_filter:
@@ -91,7 +100,7 @@ elif menu == "Kluster Data":
     else:
         data_filtered = data
 
-    # 3. Tampilkan Data dengan Pagination
+    # Pagination
     st.subheader("📄 Hasil Data (dengan Pagination)")
     rows_per_page = st.selectbox("Jumlah baris per halaman", [5, 10, 20, 50], index=1)
     total_rows = len(data_filtered)
@@ -103,19 +112,18 @@ elif menu == "Kluster Data":
     st.write(f"Menampilkan baris {start_idx + 1} - {min(end_idx, total_rows)} dari {total_rows}")
     st.dataframe(data_filtered.iloc[start_idx:end_idx], use_container_width=True)
 
-    # 4. Visualisasi
     fig, ax = plt.subplots()
     sns.scatterplot(data=data_filtered, x=fitur[0], y=fitur[1], hue="Cluster", palette="Set1", ax=ax)
     plt.title("Hasil Klasterisasi")
     st.pyplot(fig)
 
-# Tab 3: Tambah Data
+# ===================== MENU 3: Tambah Data =========================
 elif menu == "Tambah Data":
     st.header("➕ Tambah Data Pelanggan")
 
     csv_files = list_csv_files()
     if not csv_files:
-        st.warning("⚠️ Tidak ada file CSV tersedia. Silakan upload terlebih dahulu.")
+        st.warning("⚠️ Tidak ada file CSV tersedia.")
     else:
         filename = st.selectbox("Pilih File CSV", csv_files, key="tambah_select")
 
@@ -138,13 +146,13 @@ elif menu == "Tambah Data":
                 }
                 df = load_data(filename)
                 if customer_id in df["CustomerID"].values:
-                    st.warning(f"⚠️ Customer ID {customer_id} sudah ada. Gunakan ID lain.")
+                    st.warning(f"⚠️ Customer ID {customer_id} sudah ada.")
                 else:
                     df = pd.concat([df, pd.DataFrame([new_row])], ignore_index=True)
                     save_data(df, filename)
                     st.success("✅ Data berhasil ditambahkan!")
 
-# Tab 4: Hapus Data
+# ===================== MENU 4: Hapus Data =========================
 elif menu == "Hapus Data":
     st.header("🗑️ Hapus Data Pelanggan")
 
