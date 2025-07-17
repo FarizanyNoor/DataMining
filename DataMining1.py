@@ -35,7 +35,6 @@ menu = st.sidebar.selectbox("📂 Menu", [
     "Hapus Data",
 ])
 
-
 # Tab 1: Beranda
 if menu == "Beranda":
     st.header("📌 Selamat Datang")
@@ -76,31 +75,28 @@ elif menu == "Kluster Data":
     else:
         st.info("Hanya bisa memilih dua fitur numerik untuk proses klasterisasi.")
 
-    # 3. Pilih kolom yang ingin ditampilkan
-    st.subheader("🔎 Pilih Kolom untuk Ditampilkan")
+    # 3. Gabungan: Pilih Kolom & Filter
+    st.subheader("🔍 Filter & Tampilkan Data")
+
     semua_kolom = list(data.columns)
-    kolom_dipilih = st.multiselect("Pilih kolom", semua_kolom, default=semua_kolom, key="pilih_kolom")
+    kolom_dipilih = st.multiselect("Pilih Kolom yang Ingin Ditampilkan & Difilter", semua_kolom, default=semua_kolom)
 
-    # 4. Input pencarian teks
-    st.subheader("🔍 Cari Data (Filter Baris)")
-    kata_kunci = st.text_input("Masukkan kata kunci pencarian")
+    kata_kunci = st.text_input("Masukkan Kata Kunci Pencarian (berdasarkan kolom yang dipilih)")
 
-    # Filter data berdasarkan pencarian di kolom yang dipilih saja
     if kata_kunci and kolom_dipilih:
         filter_mask = pd.Series(False, index=data.index)
-        for col in kolom_dipilih:
-            filter_mask = filter_mask | data[col].astype(str).str.contains(kata_kunci, case=False, na=False)
+        for kolom in kolom_dipilih:
+            filter_mask |= data[kolom].astype(str).str.contains(kata_kunci, case=False, na=False)
         data_filtered = data[filter_mask]
     else:
         data_filtered = data
 
-    # Tampilkan data hasil filter dan kolom terpilih
     if kolom_dipilih:
         st.dataframe(data_filtered[kolom_dipilih])
     else:
         st.warning("⚠️ Pilih minimal satu kolom untuk ditampilkan.")
 
-    # Jika klasterisasi berhasil, tampilkan scatterplot
+    # Visualisasi scatterplot jika klasterisasi berhasil
     if len(fitur) == 2:
         fig, ax = plt.subplots()
         sns.scatterplot(data=data_filtered, x=fitur[0], y=fitur[1], hue="Cluster", palette="Set1", ax=ax)
@@ -161,4 +157,3 @@ elif menu == "Hapus Data":
                 st.success(f"✅ Customer ID {customer_id} berhasil dihapus.")
             else:
                 st.warning("⚠️ Customer ID tidak ditemukan.")
-
