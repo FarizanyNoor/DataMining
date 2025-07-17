@@ -30,7 +30,7 @@ def delete_row_by_id(filename, customer_id):
 
 menu = st.sidebar.selectbox("📂 Menu", [
     "Beranda",
-    "Dashboard Data",
+    "Kluster Data",
     "Tambah Data",
     "Hapus Data",
 ])
@@ -45,8 +45,8 @@ if menu == "Beranda":
     """)
 
 # Tab 2: Dashboard Data
-elif menu == "Dashboard Data":
-    st.header("📊 Dashboard Data dan Klasterisasi")
+elif menu == "Kluster Data":
+    st.header("📊Klasterisasi")
 
     # 1. Pilih file CSV
     csv_files = list_csv_files()
