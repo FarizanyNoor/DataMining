@@ -6,9 +6,9 @@ import seaborn as sns
 from sklearn.cluster import KMeans
 from sklearn.preprocessing import StandardScaler
 
-# Setup halaman
-st.set_page_config(page_title="Klasterisasi", layout="wide")
-st.title("🛍️ Aplikasi Klasterisasi Data")
+# Konfigurasi halaman
+st.set_page_config(page_title="Klasterisasi Data", layout="wide")
+st.title("🛍️ Aplikasi Klasterisasi Data Pelanggan")
 
 DATA_DIR = "data"
 os.makedirs(DATA_DIR, exist_ok=True)
@@ -28,28 +28,20 @@ def delete_row_by_id(filename, customer_id):
     df = df[df["CustomerID"] != customer_id]
     df.to_csv(path, index=False)
 
+def get_numeric_columns(df):
+    return df.select_dtypes(include='number').columns.tolist()
+
 # ====================== MENU SIDEBAR ============================
 menu = st.sidebar.selectbox("📂 Menu", [
-    "📁 Upload File CSV",
     "Beranda",
     "Kluster Data",
     "Tambah Data",
     "Hapus Data",
+    "🧩 Kelola File CSV",
 ])
 
-# ===================== MENU 0: Upload File ========================
-if menu == "📁 Upload File CSV":
-    st.header("📤 Upload File CSV Baru")
-
-    uploaded_file = st.file_uploader("Pilih file CSV", type="csv")
-    if uploaded_file:
-        save_path = os.path.join(DATA_DIR, uploaded_file.name)
-        with open(save_path, "wb") as f:
-            f.write(uploaded_file.read())
-        st.success(f"✅ File '{uploaded_file.name}' berhasil diunggah ke folder data/")
-
 # ===================== MENU 1: Beranda ============================
-elif menu == "Beranda":
+if menu == "Beranda":
     st.header("📌 Selamat Datang")
     st.write("""
         Aplikasi ini membantu proses **Klasterisasi Data** menggunakan metode **K-Means Clustering**.
@@ -69,7 +61,12 @@ elif menu == "Kluster Data":
     data = load_data(filename)
 
     st.subheader("⚙️ Klasterisasi Pelanggan")
-    fitur_numerik = ['Age', 'Annual Income (k$)', 'Spending Score (1-100)']
+    fitur_numerik = get_numeric_columns(data)
+
+    if len(fitur_numerik) < 2:
+        st.error("Dataset harus memiliki minimal 2 kolom numerik untuk klasterisasi.")
+        st.stop()
+
     fitur = st.multiselect("Pilih Fitur untuk Klasterisasi", fitur_numerik, default=fitur_numerik[:2], key="fitur_klaster")
     k = st.slider("Pilih Jumlah Klaster (k)", 2, 10, 3, key="slider_k")
 
@@ -171,3 +168,22 @@ elif menu == "Hapus Data":
                 st.success(f"✅ Customer ID {customer_id} berhasil dihapus.")
             else:
                 st.warning("⚠️ Customer ID tidak ditemukan.")
+
+# ===================== MENU 5: Kelola File =========================
+elif menu == "🧩 Kelola File CSV":
+    st.header("📁 Upload & Hapus File CSV")
+
+    # Upload File Baru
+    uploaded_file = st.file_uploader("📤 Upload File CSV Baru", type="csv")
+    if uploaded_file:
+        save_path = os.path.join(DATA_DIR, uploaded_file.name)
+        with open(save_path, "wb") as f:
+            f.write(uploaded_file.read())
+        st.success(f"✅ File '{uploaded_file.name}' berhasil diunggah ke folder data/")
+
+    # Hapus File CSV
+    st.subheader("🗑️ Hapus File CSV yang Ada")
+    file_to_delete = st.selectbox("Pilih File yang Akan Dihapus", list_csv_files(), key="delete_file")
+    if st.button("Hapus File"):
+        os.remove(os.path.join(DATA_DIR, file_to_delete))
+        st.success(f"✅ File '{file_to_delete}' berhasil dihapus.")
