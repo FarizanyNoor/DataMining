@@ -7,8 +7,8 @@ from sklearn.cluster import KMeans
 from sklearn.preprocessing import StandardScaler
 
 # Setup halaman
-st.set_page_config(page_title="Dashboard Klasterisasi", layout="wide")
-st.title("🛍️ Aplikasi Klasterisasi Pelanggan Mall")
+st.set_page_config(page_title="Klasterisasi", layout="wide")
+st.title("🛍️ Aplikasi Klasterisasi Data")
 
 DATA_DIR = "data"
 os.makedirs(DATA_DIR, exist_ok=True)
@@ -40,7 +40,7 @@ menu = st.sidebar.selectbox("📂 Menu", [
 if menu == "Beranda":
     st.header("📌 Selamat Datang")
     st.write("""
-        Aplikasi ini membantu proses **klasterisasi pelanggan** menggunakan metode **K-Means Clustering**.
+        Aplikasi ini membantu proses **Klasterisasi Data** menggunakan metode **K-Means Clustering**.
         Gunakan menu di tab atas untuk mengelola data, menambahkan, menghapus, dan upload file CSV.
     """)
 
@@ -101,7 +101,7 @@ elif menu == "Kluster Data":
         st.warning("⚠️ Pilih minimal satu kolom untuk ditampilkan.")
 
     # Jika klasterisasi berhasil, tampilkan scatterplot
-    if len(fitur) >= 2:
+    if len(fitur) = 2:
         fig, ax = plt.subplots()
         sns.scatterplot(data=data_filtered, x=fitur[0], y=fitur[1], hue="Cluster", palette="Set1", ax=ax)
         plt.title("Hasil Klasterisasi")
