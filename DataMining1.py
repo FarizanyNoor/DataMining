@@ -75,26 +75,19 @@ elif menu == "Kluster Data":
     else:
         st.info("Hanya bisa memilih dua fitur numerik untuk proses klasterisasi.")
 
-    # 3. Gabungan: Pilih Kolom & Filter
-    st.subheader("🔍 Filter & Tampilkan Data")
+    # 3. Filter Data (tanpa memilih kolom tampil)
+    st.subheader("🔍 Cari Data (Filter Baris)")
+    kata_kunci = st.text_input("Masukkan Kata Kunci Pencarian")
 
-    semua_kolom = list(data.columns)
-    kolom_dipilih = st.multiselect("Pilih Kolom yang Ingin Ditampilkan & Difilter", semua_kolom, default=semua_kolom)
-
-    kata_kunci = st.text_input("Masukkan Kata Kunci Pencarian (berdasarkan kolom yang dipilih)")
-
-    if kata_kunci and kolom_dipilih:
+    if kata_kunci:
         filter_mask = pd.Series(False, index=data.index)
-        for kolom in kolom_dipilih:
+        for kolom in data.columns:
             filter_mask |= data[kolom].astype(str).str.contains(kata_kunci, case=False, na=False)
         data_filtered = data[filter_mask]
     else:
         data_filtered = data
 
-    if kolom_dipilih:
-        st.dataframe(data_filtered[kolom_dipilih])
-    else:
-        st.warning("⚠️ Pilih minimal satu kolom untuk ditampilkan.")
+    st.dataframe(data_filtered)
 
     # Visualisasi scatterplot jika klasterisasi berhasil
     if len(fitur) == 2:
