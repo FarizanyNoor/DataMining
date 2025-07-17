@@ -74,7 +74,7 @@ elif menu == "Kluster Data":
 
         st.success("✅ Klasterisasi berhasil dilakukan!")
     else:
-        st.info("Pilih minimal dua fitur numerik untuk proses klasterisasi.")
+        st.info("Hanya bisa memilih dua fitur numerik untuk proses klasterisasi.")
 
     # 3. Pilih kolom yang ingin ditampilkan
     st.subheader("🔎 Pilih Kolom untuk Ditampilkan")
