@@ -8,7 +8,7 @@ from sklearn.preprocessing import StandardScaler
 
 # Konfigurasi halaman
 st.set_page_config(page_title="Klasterisasi Data", layout="wide")
-st.title("🛍️ Aplikasi Klasterisasi Data Pelanggan")
+st.title("🛍️ Aplikasi Klasterisasi Data ")
 
 # Direktori data
 DATA_DIR = "data"
@@ -109,7 +109,7 @@ elif menu == "Kluster Data":
 
 # Tambah Data
 elif menu == "Tambah Data":
-    st.header("➕ Tambah Data Pelanggan")
+    st.header("➕ Tambah Data ")
 
     csv_files = list_csv_files()
     if not csv_files:
@@ -142,7 +142,7 @@ elif menu == "Tambah Data":
 
 # Hapus Data
 elif menu == "Hapus Data":
-    st.header("🗑️ Hapus Data Pelanggan")
+    st.header("🗑️ Hapus Data ")
 
     csv_files = list_csv_files()
     if not csv_files:
