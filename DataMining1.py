@@ -161,24 +161,3 @@ with tabs[3]:
             else:
                 st.warning("⚠️ Customer ID tidak ditemukan.")
 
-# Tab 5: Upload/Hapus CSV
-with tabs[4]:
-    st.header("📁 Upload dan Hapus File CSV")
-
-    st.subheader("⬆️ Upload File CSV")
-    uploaded_file = st.file_uploader("Pilih file CSV", type=["csv"])
-    if uploaded_file:
-        save_path = os.path.join(DATA_DIR, uploaded_file.name)
-        with open(save_path, "wb") as f:
-            f.write(uploaded_file.getbuffer())
-        st.success(f"✅ File {uploaded_file.name} berhasil diupload.")
-
-    st.subheader("🗑️ Hapus File CSV")
-    csv_files = list_csv_files()
-    if csv_files:
-        file_to_delete = st.selectbox("Pilih file untuk dihapus", csv_files)
-        if st.button("Hapus File"):
-            os.remove(os.path.join(DATA_DIR, file_to_delete))
-            st.success(f"✅ File {file_to_delete} berhasil dihapus.")
-    else:
-        st.info("Tidak ada file CSV untuk dihapus.")
