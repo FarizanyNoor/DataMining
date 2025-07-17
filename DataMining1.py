@@ -40,26 +40,26 @@ if menu == "Beranda":
     st.header("📌 Selamat Datang")
     st.write("""
         Aplikasi ini membantu proses **Klasterisasi Data** menggunakan metode **K-Means Clustering**.
-        Gunakan menu di tab atas untuk mengelola data, menambahkan, menghapus, dan upload file CSV.
+        Gunakan menu di samping untuk mengelola data, menambahkan, menghapus, dan melakukan klasterisasi.
     """)
 
-# Tab 2: Dashboard Data
+# Tab 2: Klasterisasi
 elif menu == "Kluster Data":
     st.header("📊 Klasterisasi")
 
-    # 1. Pilih file CSV
     csv_files = list_csv_files()
     if not csv_files:
         st.warning("⚠️ Tidak ada file CSV ditemukan. Silakan upload file CSV terlebih dahulu.")
         st.stop()
+
     filename = st.selectbox("Pilih File CSV", csv_files, key="dashboard_select")
     data = load_data(filename)
 
-    # 2. Klasterisasi
+    # 1. Klasterisasi
     st.subheader("⚙️ Klasterisasi Pelanggan")
     fitur_numerik = ['Age', 'Annual Income (k$)', 'Spending Score (1-100)']
     fitur = st.multiselect("Pilih Fitur untuk Klasterisasi", fitur_numerik, default=fitur_numerik[:2], key="fitur_klaster")
-    
+
     k = st.slider("Pilih Jumlah Klaster (k)", 2, 10, 3, key="slider_k")
 
     if len(fitur) == 2:
@@ -74,8 +74,9 @@ elif menu == "Kluster Data":
         st.success("✅ Klasterisasi berhasil dilakukan!")
     else:
         st.info("Hanya bisa memilih dua fitur numerik untuk proses klasterisasi.")
+        st.stop()
 
-    # 3. Filter Data berdasarkan kolom pilihan
+    # 2. Filter Kolom & Kata Kunci
     st.subheader("🔍 Filter Data Berdasarkan Kolom yang Dipilih")
     semua_kolom = list(data.columns)
     kolom_filter = st.multiselect("Pilih Kolom Target Pencarian", semua_kolom, default=semua_kolom)
@@ -90,14 +91,23 @@ elif menu == "Kluster Data":
     else:
         data_filtered = data
 
-    st.dataframe(data_filtered)
+    # 3. Tampilkan Data dengan Pagination
+    st.subheader("📄 Hasil Data (dengan Pagination)")
+    rows_per_page = st.selectbox("Jumlah baris per halaman", [5, 10, 20, 50], index=1)
+    total_rows = len(data_filtered)
+    total_pages = (total_rows - 1) // rows_per_page + 1
+    page_number = st.number_input("Halaman", min_value=1, max_value=total_pages, value=1, step=1)
 
-    # Visualisasi scatterplot jika klasterisasi berhasil
-    if len(fitur) == 2:
-        fig, ax = plt.subplots()
-        sns.scatterplot(data=data_filtered, x=fitur[0], y=fitur[1], hue="Cluster", palette="Set1", ax=ax)
-        plt.title("Hasil Klasterisasi")
-        st.pyplot(fig)
+    start_idx = (page_number - 1) * rows_per_page
+    end_idx = start_idx + rows_per_page
+    st.write(f"Menampilkan baris {start_idx + 1} - {min(end_idx, total_rows)} dari {total_rows}")
+    st.dataframe(data_filtered.iloc[start_idx:end_idx], use_container_width=True)
+
+    # 4. Visualisasi
+    fig, ax = plt.subplots()
+    sns.scatterplot(data=data_filtered, x=fitur[0], y=fitur[1], hue="Cluster", palette="Set1", ax=ax)
+    plt.title("Hasil Klasterisasi")
+    st.pyplot(fig)
 
 # Tab 3: Tambah Data
 elif menu == "Tambah Data":
