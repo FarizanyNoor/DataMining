@@ -10,6 +10,7 @@ from sklearn.preprocessing import StandardScaler
 st.set_page_config(page_title="Klasterisasi Data", layout="wide")
 st.title("🛍️ Aplikasi Klasterisasi Data Pelanggan")
 
+# Direktori data
 DATA_DIR = "data"
 os.makedirs(DATA_DIR, exist_ok=True)
 
@@ -28,27 +29,27 @@ def delete_row_by_id(filename, customer_id):
     df = df[df["CustomerID"] != customer_id]
     df.to_csv(path, index=False)
 
-def get_numeric_columns(df):
-    return df.select_dtypes(include='number').columns.tolist()
+def delete_csv_file(filename):
+    os.remove(os.path.join(DATA_DIR, filename))
 
-# ====================== MENU SIDEBAR ============================
+# Menu utama
 menu = st.sidebar.selectbox("📂 Menu", [
     "Beranda",
     "Kluster Data",
     "Tambah Data",
     "Hapus Data",
-    "🧩 Kelola File CSV",
+    "Manajemen File CSV"
 ])
 
-# ===================== MENU 1: Beranda ============================
+# Beranda
 if menu == "Beranda":
     st.header("📌 Selamat Datang")
     st.write("""
         Aplikasi ini membantu proses **Klasterisasi Data** menggunakan metode **K-Means Clustering**.
-        Gunakan menu di samping untuk mengelola data, menambahkan, menghapus, dan melakukan klasterisasi.
+        Gunakan menu di sidebar untuk menambahkan data, menghapus data, dan melakukan klasterisasi.
     """)
 
-# ===================== MENU 2: Klasterisasi ========================
+# Klaster Data
 elif menu == "Kluster Data":
     st.header("📊 Klasterisasi")
 
@@ -57,64 +58,60 @@ elif menu == "Kluster Data":
         st.warning("⚠️ Tidak ada file CSV ditemukan.")
         st.stop()
 
-    filename = st.selectbox("Pilih File CSV", csv_files, key="dashboard_select")
+    filename = st.selectbox("Pilih File CSV", csv_files, key="klaster_file")
     data = load_data(filename)
 
-    st.subheader("⚙️ Klasterisasi Pelanggan")
-    fitur_numerik = get_numeric_columns(data)
-
-    if len(fitur_numerik) < 2:
-        st.error("Dataset harus memiliki minimal 2 kolom numerik untuk klasterisasi.")
-        st.stop()
-
+    # Deteksi fitur numerik
+    fitur_numerik = data.select_dtypes(include='number').columns.tolist()
     fitur = st.multiselect("Pilih Fitur untuk Klasterisasi", fitur_numerik, default=fitur_numerik[:2], key="fitur_klaster")
-    k = st.slider("Pilih Jumlah Klaster (k)", 2, 10, 3, key="slider_k")
+
+    k = st.number_input("Masukkan Jumlah Klaster (k)", min_value=2, max_value=10, value=3, step=1)
 
     if len(fitur) == 2:
         X = data[fitur]
         scaler = StandardScaler()
         X_scaled = scaler.fit_transform(X)
 
-        kmeans = KMeans(n_clusters=k, random_state=0)
+        kmeans = KMeans(n_clusters=int(k), random_state=0)
         kmeans.fit(X_scaled)
         data['Cluster'] = kmeans.labels_
 
         st.success("✅ Klasterisasi berhasil dilakukan!")
+
+        # Filter
+        st.subheader("🔎 Pilih Kolom untuk Pencarian")
+        semua_kolom = list(data.columns)
+        kolom_difilter = st.multiselect("Pilih Kolom Target Filter", semua_kolom, default=fitur)
+
+        st.subheader("🔍 Masukkan Kata Kunci")
+        kata_kunci = st.text_input("Masukkan kata kunci untuk filter")
+
+        if kata_kunci and kolom_difilter:
+            filter_mask = pd.Series(False, index=data.index)
+            for col in kolom_difilter:
+                filter_mask |= data[col].astype(str).str.contains(kata_kunci, case=False, na=False)
+            data_filtered = data[filter_mask]
+        else:
+            data_filtered = data
+
+        # Tabel hasil dengan pagination
+        st.subheader("📄 Tabel Hasil Klaster")
+        page_size = 10
+        total_pages = (len(data_filtered) - 1) // page_size + 1
+        page = st.number_input("Halaman", min_value=1, max_value=total_pages, step=1)
+        start = (page - 1) * page_size
+        end = start + page_size
+        st.dataframe(data_filtered.iloc[start:end])
+
+        # Visualisasi scatter
+        fig, ax = plt.subplots()
+        sns.scatterplot(data=data_filtered, x=fitur[0], y=fitur[1], hue="Cluster", palette="Set2", ax=ax)
+        plt.title("Visualisasi Klasterisasi")
+        st.pyplot(fig)
     else:
-        st.info("Hanya bisa memilih dua fitur numerik untuk proses klasterisasi.")
-        st.stop()
+        st.info("Pilih **dua fitur numerik** untuk melanjutkan proses klasterisasi.")
 
-    st.subheader("🔍 Filter Data Berdasarkan Kolom yang Dipilih")
-    semua_kolom = list(data.columns)
-    kolom_filter = st.multiselect("Pilih Kolom Target Pencarian", semua_kolom, default=semua_kolom)
-    kata_kunci = st.text_input("Masukkan Kata Kunci Pencarian")
-
-    if kata_kunci and kolom_filter:
-        filter_mask = pd.Series(False, index=data.index)
-        for kolom in kolom_filter:
-            filter_mask |= data[kolom].astype(str).str.contains(kata_kunci, case=False, na=False)
-        data_filtered = data[filter_mask]
-    else:
-        data_filtered = data
-
-    # Pagination
-    st.subheader("📄 Hasil Data (dengan Pagination)")
-    rows_per_page = st.selectbox("Jumlah baris per halaman", [5, 10, 20, 50], index=1)
-    total_rows = len(data_filtered)
-    total_pages = (total_rows - 1) // rows_per_page + 1
-    page_number = st.number_input("Halaman", min_value=1, max_value=total_pages, value=1, step=1)
-
-    start_idx = (page_number - 1) * rows_per_page
-    end_idx = start_idx + rows_per_page
-    st.write(f"Menampilkan baris {start_idx + 1} - {min(end_idx, total_rows)} dari {total_rows}")
-    st.dataframe(data_filtered.iloc[start_idx:end_idx], use_container_width=True)
-
-    fig, ax = plt.subplots()
-    sns.scatterplot(data=data_filtered, x=fitur[0], y=fitur[1], hue="Cluster", palette="Set1", ax=ax)
-    plt.title("Hasil Klasterisasi")
-    st.pyplot(fig)
-
-# ===================== MENU 3: Tambah Data =========================
+# Tambah Data
 elif menu == "Tambah Data":
     st.header("➕ Tambah Data Pelanggan")
 
@@ -132,7 +129,6 @@ elif menu == "Tambah Data":
             score = st.slider("Spending Score (1-100)", 1, 100, 50)
 
             submitted = st.form_submit_button("Simpan")
-
             if submitted:
                 new_row = {
                     "CustomerID": customer_id,
@@ -147,9 +143,9 @@ elif menu == "Tambah Data":
                 else:
                     df = pd.concat([df, pd.DataFrame([new_row])], ignore_index=True)
                     save_data(df, filename)
-                    st.success("✅ Data berhasil ditambahkan!")
+                    st.success("✅ Data berhasil ditambahkan.")
 
-# ===================== MENU 4: Hapus Data =========================
+# Hapus Data
 elif menu == "Hapus Data":
     st.header("🗑️ Hapus Data Pelanggan")
 
@@ -169,21 +165,26 @@ elif menu == "Hapus Data":
             else:
                 st.warning("⚠️ Customer ID tidak ditemukan.")
 
-# ===================== MENU 5: Kelola File =========================
-elif menu == "🧩 Kelola File CSV":
-    st.header("📁 Upload & Hapus File CSV")
+# Manajemen File CSV
+elif menu == "Manajemen File CSV":
+    st.header("📁 Manajemen File CSV")
 
-    # Upload File Baru
-    uploaded_file = st.file_uploader("📤 Upload File CSV Baru", type="csv")
+    # Upload
+    st.subheader("📤 Tambah File CSV Baru")
+    uploaded_file = st.file_uploader("Upload file CSV", type="csv")
     if uploaded_file:
-        save_path = os.path.join(DATA_DIR, uploaded_file.name)
-        with open(save_path, "wb") as f:
-            f.write(uploaded_file.read())
-        st.success(f"✅ File '{uploaded_file.name}' berhasil diunggah ke folder data/")
+        file_path = os.path.join(DATA_DIR, uploaded_file.name)
+        with open(file_path, "wb") as f:
+            f.write(uploaded_file.getbuffer())
+        st.success(f"✅ File {uploaded_file.name} berhasil ditambahkan.")
 
     # Hapus File CSV
-    st.subheader("🗑️ Hapus File CSV yang Ada")
-    file_to_delete = st.selectbox("Pilih File yang Akan Dihapus", list_csv_files(), key="delete_file")
-    if st.button("Hapus File"):
-        os.remove(os.path.join(DATA_DIR, file_to_delete))
-        st.success(f"✅ File '{file_to_delete}' berhasil dihapus.")
+    st.subheader("🗑️ Hapus File CSV")
+    csv_files = list_csv_files()
+    if csv_files:
+        file_to_delete = st.selectbox("Pilih File yang Ingin Dihapus", csv_files)
+        if st.button("Hapus File"):
+            delete_csv_file(file_to_delete)
+            st.success(f"✅ File {file_to_delete} berhasil dihapus.")
+    else:
+        st.info("Tidak ada file CSV tersedia.")
