@@ -61,11 +61,9 @@ elif menu == "Kluster Data":
     filename = st.selectbox("Pilih File CSV", csv_files, key="klaster_file")
     data = load_data(filename)
 
-    # Deteksi fitur numerik
     fitur_numerik = data.select_dtypes(include='number').columns.tolist()
     fitur = st.multiselect("Pilih Fitur untuk Klasterisasi", fitur_numerik, default=fitur_numerik[:2], key="fitur_klaster")
 
-    # Input jumlah klaster, tanpa batas maksimal
     k = st.number_input("Masukkan Jumlah Klaster (k)", min_value=2, value=3, step=1, format="%d")
 
     if len(fitur) == 2:
@@ -79,7 +77,6 @@ elif menu == "Kluster Data":
 
         st.success("✅ Klasterisasi berhasil dilakukan!")
 
-        # Filter
         st.subheader("🔎 Pilih Kolom untuk Pencarian")
         semua_kolom = list(data.columns)
         kolom_difilter = st.multiselect("Pilih Kolom Target Filter", semua_kolom, default=fitur)
@@ -95,7 +92,6 @@ elif menu == "Kluster Data":
         else:
             data_filtered = data
 
-        # Tabel hasil dengan pagination
         st.subheader("📄 Tabel Hasil Klaster")
         page_size = 10
         total_pages = (len(data_filtered) - 1) // page_size + 1
@@ -104,7 +100,6 @@ elif menu == "Kluster Data":
         end = start + page_size
         st.dataframe(data_filtered.iloc[start:end])
 
-        # Visualisasi scatter
         fig, ax = plt.subplots()
         sns.scatterplot(data=data_filtered, x=fitur[0], y=fitur[1], hue="Cluster", palette="Set2", ax=ax)
         plt.title("Visualisasi Klasterisasi")
@@ -121,30 +116,29 @@ elif menu == "Tambah Data":
         st.warning("⚠️ Tidak ada file CSV tersedia.")
     else:
         filename = st.selectbox("Pilih File CSV", csv_files, key="tambah_select")
+        df = load_data(filename)
 
         with st.form("form_tambah"):
-            customer_id = st.number_input("Customer ID", min_value=1)
-            gender = st.selectbox("Gender", ["Male", "Female"])
-            age = st.number_input("Age", min_value=10, max_value=100)
-            income = st.number_input("Annual Income (k$)", min_value=1)
-            score = st.slider("Spending Score (1-100)", 1, 100, 50)
+            st.subheader("📝 Form Tambah Data")
+            input_data = {}
+
+            for col in df.columns:
+                dtype = df[col].dtype
+
+                if pd.api.types.is_numeric_dtype(dtype):
+                    min_val = int(df[col].min()) if not df[col].isnull().all() else 0
+                    max_val = int(df[col].max()) if not df[col].isnull().all() else 100
+                    value = st.number_input(f"{col}", min_value=min_val, max_value=max_val, value=min_val)
+                else:
+                    value = st.text_input(f"{col}")
+                input_data[col] = value
 
             submitted = st.form_submit_button("Simpan")
             if submitted:
-                new_row = {
-                    "CustomerID": customer_id,
-                    "Gender": gender,
-                    "Age": age,
-                    "Annual Income (k$)": income,
-                    "Spending Score (1-100)": score
-                }
-                df = load_data(filename)
-                if customer_id in df["CustomerID"].values:
-                    st.warning(f"⚠️ Customer ID {customer_id} sudah ada.")
-                else:
-                    df = pd.concat([df, pd.DataFrame([new_row])], ignore_index=True)
-                    save_data(df, filename)
-                    st.success("✅ Data berhasil ditambahkan.")
+                new_df = pd.DataFrame([input_data])
+                df = pd.concat([df, new_df], ignore_index=True)
+                save_data(df, filename)
+                st.success("✅ Data berhasil ditambahkan.")
 
 # Hapus Data
 elif menu == "Hapus Data":
@@ -170,7 +164,6 @@ elif menu == "Hapus Data":
 elif menu == "Manajemen File CSV":
     st.header("📁 Manajemen File CSV")
 
-    # Upload
     st.subheader("📤 Tambah File CSV Baru")
     uploaded_file = st.file_uploader("Upload file CSV", type="csv")
     if uploaded_file:
@@ -179,7 +172,6 @@ elif menu == "Manajemen File CSV":
             f.write(uploaded_file.getbuffer())
         st.success(f"✅ File {uploaded_file.name} berhasil ditambahkan.")
 
-    # Hapus File CSV
     st.subheader("🗑️ Hapus File CSV")
     csv_files = list_csv_files()
     if csv_files:
