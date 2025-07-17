@@ -46,7 +46,7 @@ if menu == "Beranda":
     st.header("📌 Selamat Datang di Aplikasi Klasterisasi Data Pelanggan")
 
     st.markdown("""
-    Aplikasi ini dirancang untuk membantu Anda dalam mengelompokkan data pelanggan menggunakan metode **K-Means Clustering**.
+    Aplikasi ini dirancang untuk membantu Anda dalam mengelompokkan data menggunakan metode **K-Means Clustering**.
     Dengan aplikasi ini, Anda dapat:
     - Mengelola dan menambahkan file CSV Anda sendiri
     - Menambah dan menghapus data pelanggan
@@ -59,7 +59,7 @@ if menu == "Beranda":
     st.subheader("🧭 Panduan Penggunaan Aplikasi")
     st.markdown("""
     1. **Unggah File CSV** di menu `Manajemen File CSV`
-    2. **Tambah atau Hapus Data** pelanggan di menu yang tersedia
+    2. **Tambah atau Hapus Data** di menu yang tersedia
     3. **Lakukan Klasterisasi** berdasarkan fitur numerik (misalnya: usia, pendapatan)
     4. **Lihat Hasil Klasterisasi** dalam bentuk tabel & grafik
     """)
