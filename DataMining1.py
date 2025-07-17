@@ -28,12 +28,13 @@ def delete_row_by_id(filename, customer_id):
     df = df[df["CustomerID"] != customer_id]
     df.to_csv(path, index=False)
 
-tabs = st.tabs([
+menu = st.sidebar.selectbox("📂 Menu", [
     "Beranda",
     "Dashboard Data",
     "Tambah Data",
     "Hapus Data",
 ])
+
 
 # Tab 1: Beranda
 with tabs[0]:
