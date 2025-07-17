@@ -37,7 +37,7 @@ menu = st.sidebar.selectbox("📂 Menu", [
 
 
 # Tab 1: Beranda
-with tabs[0]:
+if menu == "Beranda":
     st.header("📌 Selamat Datang")
     st.write("""
         Aplikasi ini membantu proses **klasterisasi pelanggan** menggunakan metode **K-Means Clustering**.
@@ -45,7 +45,7 @@ with tabs[0]:
     """)
 
 # Tab 2: Dashboard Data
-with tabs[1]:
+elif menu == "Dashboard Data":
     st.header("📊 Dashboard Data dan Klasterisasi")
 
     # 1. Pilih file CSV
@@ -108,7 +108,7 @@ with tabs[1]:
         st.pyplot(fig)
 
 # Tab 3: Tambah Data
-with tabs[2]:
+elif menu == "Tambah Data":
     st.header("➕ Tambah Data Pelanggan")
 
     csv_files = list_csv_files()
@@ -143,7 +143,7 @@ with tabs[2]:
                     st.success("✅ Data berhasil ditambahkan!")
 
 # Tab 4: Hapus Data
-with tabs[3]:
+elif menu == "Hapus Data":
     st.header("🗑️ Hapus Data Pelanggan")
 
     csv_files = list_csv_files()
