@@ -45,7 +45,7 @@ if menu == "Beranda":
 
 # Tab 2: Dashboard Data
 elif menu == "Kluster Data":
-    st.header("📊Klasterisasi")
+    st.header("📊 Klasterisasi")
 
     # 1. Pilih file CSV
     csv_files = list_csv_files()
@@ -75,13 +75,16 @@ elif menu == "Kluster Data":
     else:
         st.info("Hanya bisa memilih dua fitur numerik untuk proses klasterisasi.")
 
-    # 3. Filter Data (tanpa memilih kolom tampil)
-    st.subheader("🔍 Cari Data (Filter Baris)")
+    # 3. Filter Data berdasarkan kolom pilihan
+    st.subheader("🔍 Filter Data Berdasarkan Kolom yang Dipilih")
+    semua_kolom = list(data.columns)
+    kolom_filter = st.multiselect("Pilih Kolom Target Pencarian", semua_kolom, default=semua_kolom)
+
     kata_kunci = st.text_input("Masukkan Kata Kunci Pencarian")
 
-    if kata_kunci:
+    if kata_kunci and kolom_filter:
         filter_mask = pd.Series(False, index=data.index)
-        for kolom in data.columns:
+        for kolom in kolom_filter:
             filter_mask |= data[kolom].astype(str).str.contains(kata_kunci, case=False, na=False)
         data_filtered = data[filter_mask]
     else:
